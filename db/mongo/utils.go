@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -95,12 +94,12 @@ func Insert(ctx context.Context, collName string, obj any, label ModelLabel) (st
 		return "", err
 	}
 
-	id, ok := res.InsertedID.(primitive.ObjectID)
+	id, ok := res.InsertedID.(string)
 	if !ok {
 		return "", errors.New("failed to retrieve id")
 	}
 
-	return id.Hex(), nil
+	return id, nil
 }
 
 func Update(ctx context.Context, filter any, object any) (any, error) {
@@ -122,11 +121,6 @@ func Delete(ctx context.Context, collName string, filter any, label ModelLabel) 
 
 // Delete expects a hex id
 func DeleteById(ctx context.Context, collName string, id string, label ModelLabel) error {
-	mongoId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-	
-	_, err = Delete(ctx, collName, bson.M{"_id": mongoId}, label)
+	_, err := Delete(ctx, collName, bson.M{"_id": id}, label)
 	return err
 }

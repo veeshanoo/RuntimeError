@@ -20,3 +20,18 @@ func respondWithError(w http.ResponseWriter, err error, statusCode int) {
 		return
 	}
 }
+
+type JsonResponse struct {
+	Result interface{} `json:"result"`
+}
+
+func respondWithJson(w http.ResponseWriter, obj interface{}) {
+	result := JsonResponse{
+		Result: obj,
+	}
+
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		respondWithError(w, err, http.StatusInternalServerError)
+		return
+	}
+}
