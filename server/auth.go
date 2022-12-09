@@ -1,7 +1,7 @@
 package server
 
 import (
-	"RuntimeError/types"
+	"RuntimeError/types/domain"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -16,7 +16,7 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &types.UserLogin{}
+	user := &types.User{}
 	if err := json.Unmarshal(body, user); err != nil {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
@@ -38,7 +38,7 @@ func (s *Server) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &types.UserLogin{}
+	user := &types.User{}
 	if err := json.Unmarshal(body, user); err != nil {
 		respondWithError(w, err, http.StatusBadRequest)
 		return

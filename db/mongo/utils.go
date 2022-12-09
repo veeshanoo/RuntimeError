@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"RuntimeError/types"
+	"RuntimeError/types/mongo"
 	"context"
 	"errors"
 

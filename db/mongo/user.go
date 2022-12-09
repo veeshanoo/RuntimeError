@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"RuntimeError/repo"
-	"RuntimeError/types"
+	"RuntimeError/types/mongo"
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -47,8 +47,9 @@ func (u *UserRepoImpl) GetByEmail(ctx context.Context, email string) (*types.Use
 }
 
 func (u *UserRepoImpl) Insert(ctx context.Context, user *types.User) (string, error) {
-	// set id
+	// set id, rating
 	user.Id = primitive.NewObjectID().Hex()
+	user.Rating = 0
 	return Insert(ctx, usersCollectionName, user, UserLabel)
 }
 

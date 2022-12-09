@@ -4,7 +4,8 @@ import (
 	"RuntimeError/auth"
 	internalmongo "RuntimeError/db/mongo"
 	"RuntimeError/repo"
-	"RuntimeError/types"
+	"RuntimeError/types/domain"
+	"RuntimeError/utils.go"
 	"context"
 	"errors"
 	"fmt"
@@ -13,8 +14,8 @@ import (
 )
 
 type AuthService interface {
-	Register(ctx context.Context, user *types.UserLogin) error
-	Login(ctx context.Context, user *types.UserLogin) (string, error)
+	Register(ctx context.Context, user *types.User) error
+	Login(ctx context.Context, user *types.User) (string, error)
 	auth.TokenProvider
 }
 
@@ -38,7 +39,7 @@ func (svc *AuthServiceImpl) Verify(ctx context.Context, token string) (interface
 	return svc.jwtProvider.Verify(ctx, token)
 }
 
-func (svc *AuthServiceImpl) Login(ctx context.Context, user *types.UserLogin) (string, error) {
+func (svc *AuthServiceImpl) Login(ctx context.Context, user *types.User) (string, error) {
 	userResult, err := svc.userRepo.GetByEmail(ctx, user.Email)
 	if err != nil {
 		return "", err
@@ -51,16 +52,13 @@ func (svc *AuthServiceImpl) Login(ctx context.Context, user *types.UserLogin) (s
 	return svc.Create(ctx, &types.User{Id: userResult.Id})
 }
 
-func (svc *AuthServiceImpl) Register(ctx context.Context, user *types.UserLogin) error {
+func (svc *AuthServiceImpl) Register(ctx context.Context, user *types.User) error {
 	_, err := svc.userRepo.GetByEmail(ctx, user.Email)
 	if err == nil {
 		return errors.New("email not available")
 	}
 
-	_, err = svc.userRepo.Insert(ctx, &types.User{
-		Email:    user.Email,
-		Password: user.Password,
-	})
+	_, err = svc.userRepo.Insert(ctx, utils.DomainUserToMongoUser(user))
 
 	return err
 }

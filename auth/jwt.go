@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"RuntimeError/types"
+	"RuntimeError/types/domain"
 	"context"
 	"errors"
 	"time"

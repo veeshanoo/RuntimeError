@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"RuntimeError/types"
+	"RuntimeError/types/mongo"
 	"context"
 )
 
