@@ -104,19 +104,19 @@ func Insert(ctx context.Context, collName string, obj any, label ModelLabel) (st
 	return id, nil
 }
 
-func Update(ctx context.Context, collName string, filter any, obj any) (any, error) {
+func Update(ctx context.Context, collName string, filter any, obj any) (string, error) {
 	client, err := getMongoClient()
 	if err != nil {
 		return "", err
 	}
 
 	col := client.Database(dbName).Collection(collName)
-	res, err := col.UpdateOne(ctx, filter, obj)
+	_, err = col.UpdateOne(ctx, filter, obj)
 	if err != nil {
 		return "", err
 	}
 
-	return res.UpsertedID, nil
+	return filter.(*types.Question).Id, nil
 }
 
 // Delete expects a hex id
