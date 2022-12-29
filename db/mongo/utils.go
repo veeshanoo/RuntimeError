@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"RuntimeError/types/mongo"
+	types "RuntimeError/types/mongo"
 	"context"
 	"errors"
 
@@ -104,8 +104,19 @@ func Insert(ctx context.Context, collName string, obj any, label ModelLabel) (st
 	return id, nil
 }
 
-func Update(ctx context.Context, filter any, object any) (any, error) {
-	return nil, nil
+func Update(ctx context.Context, collName string, filter any, obj any) (any, error) {
+	client, err := getMongoClient()
+	if err != nil {
+		return "", err
+	}
+
+	col := client.Database(dbName).Collection(collName)
+	res, err := col.UpdateOne(ctx, filter, obj)
+	if err != nil {
+		return "", err
+	}
+
+	return res.UpsertedID, nil
 }
 
 // Delete expects a hex id
