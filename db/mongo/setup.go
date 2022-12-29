@@ -27,7 +27,7 @@ func getMongoClient() (*mongodb.Client, error) {
 			if err := initClient(); err != nil {
 				return nil, err
 			}
-			
+
 			isInitialized = true
 			return mongoClient, nil
 		}
@@ -37,7 +37,7 @@ func getMongoClient() (*mongodb.Client, error) {
 }
 
 func initClient() error {
-	// read config	
+	// read config
 	uri := "mongodb+srv://dioji.64lmttz.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=X509-cert-6416201640233700126.pem"
 
 	// mongodb.SessionContext
@@ -45,13 +45,13 @@ func initClient() error {
 	defer cancel()
 
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
-  	clientOptions := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPIOptions)
+	clientOptions := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPIOptions)
 
 	var connErr error
 	mongoClient, connErr = mongodb.Connect(initContext, clientOptions)
 	if connErr != nil {
-		return nil
+		return connErr
 	}
 
-	return mongoClient.Ping(initContext, nil);
+	return mongoClient.Ping(initContext, nil)
 }
