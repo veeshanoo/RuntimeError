@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type ServerConfig struct {
@@ -87,7 +88,7 @@ func (s *Server) Run() {
 
 	server := &http.Server{
 		Addr:    addr,
-		Handler: s.Router,
+		Handler: cors.Default().Handler(s.Router),
 	}
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
