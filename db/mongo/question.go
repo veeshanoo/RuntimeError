@@ -3,6 +3,7 @@ package mongo
 import (
 	types "RuntimeError/types/mongo"
 	"context"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -33,7 +34,7 @@ func (q *QuestionRepoImpl) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (u *QuestionRepoImpl) GetAll(ctx context.Context) ([]*types.Question, error) {
+func (q *QuestionRepoImpl) GetAll(ctx context.Context) ([]*types.Question, error) {
 	result, err := GetAll(ctx, questionsCollectionName, bson.M{}, QuestionLabel)
 	if err != nil {
 		return nil, err
@@ -42,7 +43,7 @@ func (u *QuestionRepoImpl) GetAll(ctx context.Context) ([]*types.Question, error
 	return result.([]*types.Question), nil
 }
 
-func (u *QuestionRepoImpl) GetById(ctx context.Context, id string) (*types.Question, error) {
+func (q *QuestionRepoImpl) GetById(ctx context.Context, id string) (*types.Question, error) {
 	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
 	if err != nil {
 		return nil, err
@@ -51,7 +52,7 @@ func (u *QuestionRepoImpl) GetById(ctx context.Context, id string) (*types.Quest
 	return result.(*types.Question), nil
 }
 
-func (u *QuestionRepoImpl) UpvoteQuestion(ctx context.Context, id string, upvotterId string) (string, error) {
+func (q *QuestionRepoImpl) UpvoteQuestion(ctx context.Context, id string, upvotterId string) (string, error) {
 	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
 	if err != nil {
 		return "", err
@@ -72,10 +73,10 @@ func (u *QuestionRepoImpl) UpvoteQuestion(ctx context.Context, id string, upvott
 	}
 
 	question.Upvoters = append(question.Upvoters, upvotterId)
-	return u.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result.(*types.Question), question)
 }
 
-func (u *QuestionRepoImpl) DownvoteQuestion(ctx context.Context, id string, downvotterId string) (string, error) {
+func (q *QuestionRepoImpl) DownvoteQuestion(ctx context.Context, id string, downvotterId string) (string, error) {
 	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
 	if err != nil {
 		return "", err
@@ -95,49 +96,57 @@ func (u *QuestionRepoImpl) DownvoteQuestion(ctx context.Context, id string, down
 		}
 	}
 	question.Downvoters = append(question.Downvoters, downvotterId)
-	return u.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result.(*types.Question), question)
 }
 
-func (u *QuestionRepoImpl) AddAnswerToQuestion(ctx context.Context, id string, answer *types.Answer) (string, error) {
-	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+func (q *QuestionRepoImpl) AddAnswerToQuestion(ctx context.Context, id string, answer *types.Answer) (string, error) {
+	result, err := q.GetById(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	question := result.(*types.Question)
+	question := result
 	question.Answers = append(question.Answers, *answer)
-	return u.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result, question)
 }
 
-func (u *QuestionRepoImpl) AddReplyToAnswer(ctx context.Context, id string, answerId string, reply *types.Reply) (string, error) {
-	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+func (q *QuestionRepoImpl) AddReplyToAnswer(ctx context.Context, id string, answerId string, reply *types.Reply) (string, error) {
+	result, err := q.GetById(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	question := result.(*types.Question)
+	question := result
+	found := false
 	for _, answer := range question.Answers {
 		if answer.Id == answerId {
 			answer.Replies = append(answer.Replies, *reply)
+			found = true
 		}
 	}
-	return u.Update(ctx, result.(*types.Question), question)
+	if !found {
+		return "", errors.New("No answer found.")
+	}
+	return q.Update(ctx, result, question)
 }
 
-func (u *QuestionRepoImpl) EditContent(ctx context.Context, id string, newContent string) (string, error) {
-	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+func (q *QuestionRepoImpl) EditContent(ctx context.Context, id string, newContent string) (string, error) {
+	result, err := q.GetById(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	question := result.(*types.Question)
+	question := result
 	question.Contents = newContent
-	return u.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result, question)
 }
 
-func (u *QuestionRepoImpl) FavoriteComment(ctx context.Context, id string, bestAnswer string) (string, error) {
+func (q *QuestionRepoImpl) FavoriteComment(ctx context.Context, id string, bestAnswer string) (string, error) {
 	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
 	if err != nil {
 		return "", err
 	}
 	question := result.(*types.Question)
+	if question.BestAnswer != "" {
+		return "", errors.New("Best answer already exists.")
+	}
 	question.BestAnswer = bestAnswer
-	return u.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result.(*types.Question), question)
 }
