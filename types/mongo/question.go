@@ -1,16 +1,5 @@
 package types
 
-type UserLoginResponse struct {
-	Token string `json:"token"`
-}
-
-type User struct {
-	Id       string `json:"id"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Rating   int64  `json:"rating"`
-}
-
 type Reply struct {
 	Id          string `json:"id"`
 	Contents    string `json:"contents"`

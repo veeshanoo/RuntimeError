@@ -11,8 +11,8 @@ import (
 
 const usersCollectionName = "users"
 
-// User implements repo.UserRepo
-// _id will be stored as plain stirng, not ObjectID
+// implements UserRepo
+// _id will be stored as plain string, not ObjectID
 type UserRepoImpl struct{}
 
 func NewUserRepo() repo.UserRepo {

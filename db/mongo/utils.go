@@ -12,8 +12,10 @@ import (
 const dbName = "RuntimeError"
 
 type ModelLabel string
+
 const (
-	UserLabel ModelLabel = "user"
+	UserLabel     ModelLabel = "user"
+	QuestionLabel ModelLabel = "question"
 )
 
 func decodeSingleResult(result *mongo.SingleResult, label ModelLabel) (any, error) {
@@ -38,7 +40,7 @@ func decodeCursor(ctx context.Context, cursor *mongo.Cursor, label ModelLabel) (
 			//TODO
 		}
 	}()
-	
+
 	switch label {
 	case UserLabel:
 		var users []*types.User

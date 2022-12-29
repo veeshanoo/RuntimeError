@@ -12,27 +12,81 @@ import (
 )
 
 type ServerConfig struct {
+	Address string
+	Port    string
+}
+
+type ServerBuilder struct {
+	config          *ServerConfig
+	router          *mux.Router
+	authService     services.AuthService
+	questionService services.QuestionService
+}
+
+func NewServerBuilder() *ServerBuilder {
+	return &ServerBuilder{}
+}
+
+func (b *ServerBuilder) WithConfig(config *ServerConfig) *ServerBuilder {
+	b.config = config
+	return b
+}
+
+func (b *ServerBuilder) WithRouter(router *mux.Router) *ServerBuilder {
+	b.router = router
+	return b
+}
+
+func (b *ServerBuilder) WithAuthService(authService services.AuthService) *ServerBuilder {
+	b.authService = authService
+	return b
+}
+
+func (b *ServerBuilder) WithQuestionService(questionService services.QuestionService) *ServerBuilder {
+	b.questionService = questionService
+	return b
+}
+
+func (b *ServerBuilder) Build() *Server {
+	server := &Server{
+		Config:          b.config,
+		Router:          b.router,
+		authService:     b.authService,
+		questionService: b.questionService,
+	}
+
+	return server
 }
 
 type Server struct {
-	Config      *ServerConfig
-	Router      *mux.Router
-	authService services.AuthService
+	Config          *ServerConfig
+	Router          *mux.Router
+	authService     services.AuthService
+	questionService services.QuestionService
 }
 
 func NewServer() *Server {
-	return &Server{}
+	return NewServerBuilder().
+		WithRouter(mux.NewRouter()).
+		WithAuthService(services.NewAuthService()).
+		WithQuestionService(services.NewQuestionService()).
+		Build()
 }
 
 func (s *Server) Init() {
-	s.Router = mux.NewRouter()
-	s.authService = services.NewAuthService()
 	s.BuildRoutes()
 }
 
 func (s *Server) Run() {
+	var addr string
+	if s.Config != nil {
+		addr = fmt.Sprintf("%s:%s", s.Config.Address, s.Config.Port)
+	} else {
+		addr = "0.0.0.0:8080"
+	}
+
 	server := &http.Server{
-		Addr:    "0.0.0.0:8080",
+		Addr:    addr,
 		Handler: s.Router,
 	}
 
@@ -69,10 +123,10 @@ func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
 func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		excludePaths := map[string]bool{
-			"/api/login": true,
+			"/api/login":    true,
 			"/api/register": true,
 		}
-		
+
 		if _, ok := excludePaths[r.URL.RequestURI()]; ok {
 			next.ServeHTTP(w, r)
 			return

@@ -20,7 +20,7 @@ func newJwt(user *types.User) (string, error) {
 	claims := &JWTClaims{
 		UserId: user.Id,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * 60 * time.Minute)),
 		},
 	}
 
