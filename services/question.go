@@ -4,6 +4,7 @@ import (
 	"RuntimeError/db/mongo"
 	"RuntimeError/repo"
 	types "RuntimeError/types/domain"
+	helper "RuntimeError/utils"
 	"context"
 )
 
@@ -23,31 +24,6 @@ func NewQuestionService() QuestionService {
 
 func (svc *QuestionServiceImpl) CreateQuestion(ctx context.Context, question *types.Question) (string, error) {
 
-	// return svc.questionRepo.Insert(ctx, question)
-	return "", nil
+	return svc.questionRepo.Insert(ctx, helper.DomainQuestionToMongo(question))
+	// return "", nil
 }
-
-// func fromDomainToMongo(question *types.Question) mongoType.Question {
-// 	// replies := mongoType.Reply {
-// 	// 	Id: q,
-// 	// 	Contents: "",
-// 	// 	SubmitterId: "",
-// 	// }
-// 	// answers := mongoType.Answer {
-// 	// 	Id : "",
-// 	// 	Contents: "",
-// 	// 	SubbmiterId: "",
-// 	// 	Replies: ,
-// 	// }
-// 	// x := mongoType.Question{
-// 	// 	Id:         question.Id,
-// 	// 	SumitterId: question.SumitterId,
-// 	// 	Title:      question.Title,
-// 	// 	Contents:   question.Contents,
-// 	// 	Answers:    question.Answers,
-// 	// 	BestAnswer: question.BestAnswer,
-// 	// 	Upvoters:   question.Upvoters,
-// 	// 	Downvoters: question.Downvoters,
-// 	// }
-// 	// return x
-// }
