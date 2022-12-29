@@ -26,6 +26,12 @@ func decodeSingleResult(result *mongo.SingleResult, label ModelLabel) (any, erro
 			return nil, err
 		}
 		return user, nil
+	case QuestionLabel:
+		question := &types.Question{}
+		if err := result.Decode(question); err != nil {
+			return nil, err
+		}
+		return question, nil
 	}
 
 	return nil, errors.New("unknown label")
@@ -54,6 +60,17 @@ func decodeCursor(ctx context.Context, cursor *mongo.Cursor, label ModelLabel) (
 		}
 
 		return users, nil
+	case QuestionLabel:
+		var questions []*types.Question
+		for cursor.Next(ctx) {
+			question := &types.Question{}
+			if err := cursor.Decode(question); err != nil {
+				return nil, err
+			}
+
+			questions = append(questions, question)
+		}
+		return questions, nil
 	}
 
 	return nil, errors.New("unknown label")
@@ -111,12 +128,12 @@ func Update(ctx context.Context, collName string, filter any, obj any) (string, 
 	}
 
 	col := client.Database(dbName).Collection(collName)
-	_, err = col.UpdateOne(ctx, filter, obj)
+	res, err := col.UpdateOne(ctx, filter, obj)
 	if err != nil {
 		return "", err
 	}
 
-	return filter.(*types.Question).Id, nil
+	return res.UpsertedID.(string), nil
 }
 
 // Delete expects a hex id

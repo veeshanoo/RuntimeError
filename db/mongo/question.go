@@ -26,7 +26,7 @@ func (q *QuestionRepoImpl) Insert(ctx context.Context, question *types.Question)
 }
 
 func (q *QuestionRepoImpl) Update(ctx context.Context, oldQuestion *types.Question, newQuestion *types.Question) (string, error) {
-	return Update(ctx, questionsCollectionName, oldQuestion, newQuestion)
+	return Update(ctx, questionsCollectionName, bson.M{"_id": oldQuestion.Id}, newQuestion)
 }
 
 func (q *QuestionRepoImpl) Delete(ctx context.Context, id string) error {
@@ -57,6 +57,20 @@ func (u *QuestionRepoImpl) UpvoteQuestion(ctx context.Context, id string, upvott
 		return "", err
 	}
 	question := result.(*types.Question)
+	for _, upvoter := range question.Upvoters {
+		if upvoter == upvotterId {
+			// already exists
+			return "", nil
+		}
+	}
+
+	for idx, downvotter := range question.Downvoters {
+		if downvotter == upvotterId {
+			// remove selected item
+			question.Downvoters = append(question.Downvoters[:idx], question.Downvoters[idx+1:]...)
+		}
+	}
+
 	question.Upvoters = append(question.Upvoters, upvotterId)
 	return u.Update(ctx, result.(*types.Question), question)
 }
@@ -67,7 +81,20 @@ func (u *QuestionRepoImpl) DownvoteQuestion(ctx context.Context, id string, down
 		return "", err
 	}
 	question := result.(*types.Question)
-	question.Downvoters = append(question.Upvoters, downvotterId)
+	for _, downvotter := range question.Downvoters {
+		if downvotter == downvotterId {
+			// already exists
+			return "", nil
+		}
+	}
+
+	for idx, upvoter := range question.Upvoters {
+		if upvoter == downvotterId {
+			// remove selected item
+			question.Downvoters = append(question.Upvoters[:idx], question.Upvoters[idx+1:]...)
+		}
+	}
+	question.Downvoters = append(question.Downvoters, downvotterId)
 	return u.Update(ctx, result.(*types.Question), question)
 }
 
