@@ -81,6 +81,20 @@ func (u *QuestionRepoImpl) AddAnswerToQuestion(ctx context.Context, id string, a
 	return u.Update(ctx, result.(*types.Question), question)
 }
 
+func (u *QuestionRepoImpl) AddReplyToAnswer(ctx context.Context, id string, answerId string, reply *types.Reply) (string, error) {
+	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+	if err != nil {
+		return "", err
+	}
+	question := result.(*types.Question)
+	for _, answer := range question.Answers {
+		if answer.Id == answerId {
+			answer.Replies = append(answer.Replies, *reply)
+		}
+	}
+	return u.Update(ctx, result.(*types.Question), question)
+}
+
 func (u *QuestionRepoImpl) EditContent(ctx context.Context, id string, newContent string) (string, error) {
 	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
 	if err != nil {
