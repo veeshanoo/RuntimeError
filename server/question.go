@@ -4,7 +4,6 @@ import (
 	types "RuntimeError/types/domain"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -42,8 +41,6 @@ func (s *Server) EditContent(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
-	fmt.Println(question.Id)
-	fmt.Println(question.Contents)
 	_, err = s.questionService.EditConent(context.Background(), question.Id, question.Contents)
 	if err != nil {
 		respondWithError(w, err, http.StatusUnauthorized)
