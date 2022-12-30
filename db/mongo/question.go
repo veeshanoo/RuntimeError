@@ -53,11 +53,11 @@ func (q *QuestionRepoImpl) GetById(ctx context.Context, id string) (*types.Quest
 }
 
 func (q *QuestionRepoImpl) UpvoteQuestion(ctx context.Context, id string, upvotterId string) (string, error) {
-	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+	result, err := q.GetById(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	question := result.(*types.Question)
+	question := result
 	for _, upvoter := range question.Upvoters {
 		if upvoter == upvotterId {
 			// already exists
@@ -73,15 +73,15 @@ func (q *QuestionRepoImpl) UpvoteQuestion(ctx context.Context, id string, upvott
 	}
 
 	question.Upvoters = append(question.Upvoters, upvotterId)
-	return q.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result, question)
 }
 
 func (q *QuestionRepoImpl) DownvoteQuestion(ctx context.Context, id string, downvotterId string) (string, error) {
-	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+	result, err := q.GetById(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	question := result.(*types.Question)
+	question := result
 	for _, downvotter := range question.Downvoters {
 		if downvotter == downvotterId {
 			// already exists
@@ -96,7 +96,7 @@ func (q *QuestionRepoImpl) DownvoteQuestion(ctx context.Context, id string, down
 		}
 	}
 	question.Downvoters = append(question.Downvoters, downvotterId)
-	return q.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result, question)
 }
 
 func (q *QuestionRepoImpl) AddAnswerToQuestion(ctx context.Context, id string, answer *types.Answer) (string, error) {
@@ -139,14 +139,23 @@ func (q *QuestionRepoImpl) EditContent(ctx context.Context, id string, newConten
 }
 
 func (q *QuestionRepoImpl) FavoriteComment(ctx context.Context, id string, bestAnswer string) (string, error) {
-	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+	result, err := q.GetById(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	question := result.(*types.Question)
+	question := result
 	if question.BestAnswer != "" {
 		return "", errors.New("Best answer already exists.")
 	}
+	answerExist := false
+	for _, answer := range question.Answers {
+		if answer.Id == bestAnswer {
+			answerExist = true
+		}
+	}
+	if !answerExist {
+		return "", errors.New("Answer doesn't exists")
+	}
 	question.BestAnswer = bestAnswer
-	return q.Update(ctx, result.(*types.Question), question)
+	return q.Update(ctx, result, question)
 }
