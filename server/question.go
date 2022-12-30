@@ -46,7 +46,36 @@ func (s *Server) EditContent(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, err, http.StatusUnauthorized)
 		return
 	}
-	respondWithJson(w, nil)
+	respondWithJson(w, question)
+
+}
+
+func (s *Server) AddAnswerToQuestion(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	values := r.URL.Query()
+	id := ""
+	for k, v := range values {
+		if k == "id" {
+			id = v[0]
+		}
+	}
+
+	if err != nil {
+		respondWithError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	answer := &types.Answer{}
+	if err := json.Unmarshal(body, answer); err != nil {
+		respondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+	_, err = s.questionService.AddAnswerToQuestion(context.Background(), id, answer)
+	if err != nil {
+		respondWithError(w, err, http.StatusUnauthorized)
+		return
+	}
+	respondWithJson(w, id)
 
 }
 

@@ -108,17 +108,12 @@ func Insert(ctx context.Context, collName string, obj any, label ModelLabel) (st
 	}
 
 	col := client.Database(dbName).Collection(collName)
-	res, err := col.InsertOne(ctx, obj)
+	_, err = col.InsertOne(ctx, obj)
 	if err != nil {
 		return "", err
 	}
 
-	id, ok := res.InsertedID.(string)
-	if !ok {
-		return "", errors.New("failed to retrieve id")
-	}
-
-	return id, nil
+	return obj.(*types.Question).Id, nil
 }
 
 func Update(ctx context.Context, collName string, filter any, obj any) (string, error) {
@@ -128,11 +123,11 @@ func Update(ctx context.Context, collName string, filter any, obj any) (string, 
 	}
 
 	col := client.Database(dbName).Collection(collName)
-	res, err := col.ReplaceOne(ctx, filter, obj)
+	_, err = col.ReplaceOne(ctx, filter, obj)
 	if err != nil {
 		return "", err
 	}
-	return res.UpsertedID.(string), nil
+	return obj.(*types.Question).Id, nil
 }
 
 // Delete expects a hex id
