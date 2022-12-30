@@ -106,6 +106,7 @@ func (q *QuestionRepoImpl) AddAnswerToQuestion(ctx context.Context, id string, a
 		return "", err
 	}
 	question := result
+	answer.Id = primitive.NewObjectID().Hex()
 	question.Answers = append(question.Answers, *answer)
 	return q.Update(ctx, result, question)
 }
@@ -116,11 +117,13 @@ func (q *QuestionRepoImpl) AddReplyToAnswer(ctx context.Context, id string, answ
 		return "", err
 	}
 	question := result
+	reply.Id = primitive.NewObjectID().Hex()
 	found := false
-	for _, answer := range question.Answers {
+	for idx, answer := range question.Answers {
 		if answer.Id == answerId {
-			answer.Replies = append(answer.Replies, *reply)
+			question.Answers[idx].Replies = append(answer.Replies, *reply)
 			found = true
+			break
 		}
 	}
 	if !found {
