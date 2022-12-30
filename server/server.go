@@ -82,7 +82,7 @@ func (s *Server) Run() {
 	if s.Config != nil {
 		addr = fmt.Sprintf("%s:%s", s.Config.Address, s.Config.Port)
 	} else {
-		addr = "0.0.0.0:8080"
+		addr = "0.0.0.0:8081"
 	}
 
 	server := &http.Server{
@@ -105,6 +105,9 @@ func (s *Server) BuildRoutes() {
 	apiRouter.HandleFunc("/login", s.Login).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/register", s.Register).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/test", s.Test).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/questions/create", s.CreateQuestion).Methods(http.MethodPost)
+	apiRouter.HandleFunc("/questions/getAll", s.GetAll).Methods(http.MethodGet)
+
 }
 
 func (s *Server) Test(w http.ResponseWriter, r *http.Request) {
