@@ -82,7 +82,7 @@ func (s *Server) Run() {
 	if s.Config != nil {
 		addr = fmt.Sprintf("%s:%s", s.Config.Address, s.Config.Port)
 	} else {
-		addr = "0.0.0.0:8081"
+		addr = "0.0.0.0:8080"
 	}
 
 	server := &http.Server{
