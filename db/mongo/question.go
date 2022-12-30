@@ -28,7 +28,7 @@ func (q *QuestionRepoImpl) Insert(ctx context.Context, question *types.Question)
 }
 
 func (q *QuestionRepoImpl) Update(ctx context.Context, oldQuestion *types.Question, newQuestion *types.Question) (string, error) {
-	return Update(ctx, questionsCollectionName, bson.M{"_id": oldQuestion.Id}, newQuestion)
+	return Update(ctx, questionsCollectionName, bson.M{"id": oldQuestion.Id}, newQuestion)
 }
 
 func (q *QuestionRepoImpl) Delete(ctx context.Context, id string) error {
@@ -45,7 +45,7 @@ func (q *QuestionRepoImpl) GetAll(ctx context.Context) ([]*types.Question, error
 }
 
 func (q *QuestionRepoImpl) GetById(ctx context.Context, id string) (*types.Question, error) {
-	result, err := GetOne(ctx, questionsCollectionName, bson.M{"_id": id}, QuestionLabel)
+	result, err := GetOne(ctx, questionsCollectionName, bson.M{"id": id}, QuestionLabel)
 	if err != nil {
 		return nil, err
 	}
@@ -134,6 +134,7 @@ func (q *QuestionRepoImpl) EditContent(ctx context.Context, id string, newConten
 	if err != nil {
 		return "", err
 	}
+
 	question := result
 	question.Contents = newContent
 	return q.Update(ctx, result, question)

@@ -128,11 +128,10 @@ func Update(ctx context.Context, collName string, filter any, obj any) (string, 
 	}
 
 	col := client.Database(dbName).Collection(collName)
-	res, err := col.UpdateOne(ctx, filter, obj)
+	res, err := col.ReplaceOne(ctx, filter, obj)
 	if err != nil {
 		return "", err
 	}
-
 	return res.UpsertedID.(string), nil
 }
 
