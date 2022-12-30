@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const questionsCollectionName = "questions"
@@ -22,7 +23,7 @@ func (q *QuestionRepoImpl) Insert(ctx context.Context, question *types.Question)
 	question.Answers = nil
 	question.Upvoters = nil
 	question.Downvoters = nil
-
+	question.Id = primitive.NewObjectID().Hex()
 	return Insert(ctx, questionsCollectionName, question, QuestionLabel)
 }
 
