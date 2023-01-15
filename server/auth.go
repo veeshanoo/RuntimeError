@@ -4,6 +4,7 @@ import (
 	"RuntimeError/types/domain"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -53,4 +54,22 @@ func (s *Server) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJson(w, nil)
+}
+
+func (s *Server) GetUserData(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("auth-token")
+	idIface, err := s.authService.Verify(context.TODO(), token)
+	if err != nil {
+		respondWithError(w, errors.New("invalid cookie"), http.StatusUnauthorized)
+		return
+	}
+
+	userId := idIface.(string)
+	userData, err := s.authService.GetUserData(context.TODO(), userId)
+	if err != nil {
+		respondWithError(w, errors.New("unknown"), http.StatusInternalServerError)
+		return
+	}
+
+	respondWithJson(w, userData)
 }

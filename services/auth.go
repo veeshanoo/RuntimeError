@@ -16,6 +16,7 @@ import (
 type AuthService interface {
 	Register(ctx context.Context, user *types.User) error
 	Login(ctx context.Context, user *types.User) (string, error)
+	GetUserData(ctx context.Context, id string) (*types.UserData, error)
 	auth.TokenProvider
 }
 
@@ -61,6 +62,21 @@ func (svc *AuthServiceImpl) Register(ctx context.Context, user *types.User) erro
 	_, err = svc.userRepo.Insert(ctx, utils.DomainUserToMongoUser(user))
 
 	return err
+}
+
+func (svc *AuthServiceImpl) GetUserData(ctx context.Context, id string) (*types.UserData, error) {
+	user, err := svc.userRepo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	userData := &types.UserData{
+		Id:     user.Id,
+		Email:  user.Email,
+		Rating: user.Rating,
+	}
+
+	return userData, nil
 }
 
 func (svc *AuthServiceImpl) Transaction(ctx context.Context) (*types.User, error) {

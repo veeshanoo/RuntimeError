@@ -11,6 +11,12 @@ type User struct {
 	Rating   int64  `json:"rating"`
 }
 
+type UserData struct {
+	Id     string `json:"id"`
+	Email  string `json:"email"`
+	Rating int64  `json:"rating"`
+}
+
 type Reply struct {
 	Id          string `json:"id"`
 	Contents    string `json:"contents"`

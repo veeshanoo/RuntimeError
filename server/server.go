@@ -114,7 +114,7 @@ func (s *Server) BuildRoutes() {
 	apiRouter.HandleFunc("/questions/downvoteQuestion", s.DownvoteQuestion).Methods(http.MethodPut)
 	apiRouter.HandleFunc("/questions/upvoteQuestion", s.UpvoteQuestion).Methods(http.MethodPut)
 	apiRouter.HandleFunc("/questions/addReplyToAnswer", s.AddReplyToAnswer).Methods(http.MethodPut)
-
+	apiRouter.HandleFunc("/user", s.GetUserData).Methods(http.MethodGet)
 }
 
 func (s *Server) Test(w http.ResponseWriter, r *http.Request) {
