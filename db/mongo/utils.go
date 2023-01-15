@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"RuntimeError/types/mongo"
+	types "RuntimeError/types/mongo"
 	"context"
 	"errors"
 
@@ -26,6 +26,12 @@ func decodeSingleResult(result *mongo.SingleResult, label ModelLabel) (any, erro
 			return nil, err
 		}
 		return user, nil
+	case QuestionLabel:
+		question := &types.Question{}
+		if err := result.Decode(question); err != nil {
+			return nil, err
+		}
+		return question, nil
 	}
 
 	return nil, errors.New("unknown label")
@@ -54,6 +60,17 @@ func decodeCursor(ctx context.Context, cursor *mongo.Cursor, label ModelLabel) (
 		}
 
 		return users, nil
+	case QuestionLabel:
+		var questions []*types.Question
+		for cursor.Next(ctx) {
+			question := &types.Question{}
+			if err := cursor.Decode(question); err != nil {
+				return nil, err
+			}
+
+			questions = append(questions, question)
+		}
+		return questions, nil
 	}
 
 	return nil, errors.New("unknown label")
@@ -91,21 +108,26 @@ func Insert(ctx context.Context, collName string, obj any, label ModelLabel) (st
 	}
 
 	col := client.Database(dbName).Collection(collName)
-	res, err := col.InsertOne(ctx, obj)
+	_, err = col.InsertOne(ctx, obj)
 	if err != nil {
 		return "", err
 	}
 
-	id, ok := res.InsertedID.(string)
-	if !ok {
-		return "", errors.New("failed to retrieve id")
-	}
-
-	return id, nil
+	return obj.(*types.Question).Id, nil
 }
 
-func Update(ctx context.Context, filter any, object any) (any, error) {
-	return nil, nil
+func Update(ctx context.Context, collName string, filter any, obj any) (string, error) {
+	client, err := getMongoClient()
+	if err != nil {
+		return "", err
+	}
+
+	col := client.Database(dbName).Collection(collName)
+	_, err = col.ReplaceOne(ctx, filter, obj)
+	if err != nil {
+		return "", err
+	}
+	return obj.(*types.Question).Id, nil
 }
 
 // Delete expects a hex id
