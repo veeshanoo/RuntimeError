@@ -113,7 +113,7 @@ func Insert(ctx context.Context, collName string, obj any, label ModelLabel) (st
 		return "", err
 	}
 
-	return obj.(*types.Question).Id, nil
+	return "", nil
 }
 
 func Update(ctx context.Context, collName string, filter any, obj any) (string, error) {
@@ -127,7 +127,7 @@ func Update(ctx context.Context, collName string, filter any, obj any) (string, 
 	if err != nil {
 		return "", err
 	}
-	return obj.(*types.Question).Id, nil
+	return "", nil
 }
 
 // Delete expects a hex id
