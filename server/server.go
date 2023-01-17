@@ -88,7 +88,7 @@ func (s *Server) Run() {
 
 	server := &http.Server{
 		Addr:    addr,
-		Handler: cors.Default().Handler(s.Router),
+		Handler: cors.AllowAll().Handler(s.Router),
 	}
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
