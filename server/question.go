@@ -4,6 +4,7 @@ import (
 	types "RuntimeError/types/domain"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
@@ -114,7 +115,7 @@ func (s *Server) UpdateQuestionVotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if updateReq.Type != "upvote" && updateReq.Type != "downvote" {
-		respondWithError(w, err, http.StatusBadRequest)
+		respondWithError(w, errors.New("invalid type"), http.StatusBadRequest)
 		return
 	}
 
@@ -184,7 +185,7 @@ func (s *Server) AddReplyToAnswer(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, err, http.StatusNotFound)
 		return
 	}
-	
+
 	respondWithJson(w, nil)
 }
 

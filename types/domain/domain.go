@@ -35,7 +35,7 @@ type Question struct {
 	SumitterId string   `json:"submitter_id"`
 	Title      string   `json:"title"`
 	Contents   string   `json:"contents"`
-	Answers    []Answer `json:"replies"`
+	Answers    []Answer `json:"answers"`
 	BestAnswer string   `json:"best_answer_id"`
 	Upvoters   []string `json:"upvoters"`
 	Downvoters []string `json:"downvoters"`
@@ -63,7 +63,7 @@ type UpdateQuestionVotesRequest struct {
 type EditContentRequest struct {
 	QuestionId string `json:"question_id"`
 	Title      string `json:"title"`
-	Content    string `json:"content"`
+	Content    string `json:"contents"`
 }
 
 type AddAnswerRequest struct {
