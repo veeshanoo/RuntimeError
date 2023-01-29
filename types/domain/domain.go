@@ -46,11 +46,13 @@ type Question struct {
 
 // for questions only
 type EditSuggestion struct {
-	Id          string `json:"id"`
-	QuestionId  string `json:"question_id"`
-	SubmitterId string `json:"submitter_id"`
-	Contents    string `json:"contents"`
-	EditStatus  string `json:"edit_status"` // default,approve,reject
+	Id             string `json:"id"`
+	QuestionId     string `json:"question_id"`
+	ApproverId     string `json:"approver_id"`
+	SubmitterId    string `json:"submitter_id"`
+	SubmitterEmail string `json:"submitter_email"`
+	Contents       string `json:"contents"`
+	EditStatus     string `json:"edit_status"` // default,approve,reject
 }
 
 type FavoriteCommentRequest struct {

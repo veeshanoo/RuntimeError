@@ -209,3 +209,84 @@ func (s *Server) GetQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	respondWithJson(w, q)
 }
+
+func (s *Server) GetIncomingSuggestions(w http.ResponseWriter, r *http.Request) {
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	claims := iface.(*auth.JWTClaims)
+
+	sug, err := s.suggestionService.GetIncomingSuggestions(context.Background(), claims.UserId)
+	if err != nil {
+		respondWithError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	respondWithJson(w, sug)
+}
+
+func (s *Server) GetOutgoingSuggestions(w http.ResponseWriter, r *http.Request) {
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	claims := iface.(*auth.JWTClaims)
+
+	sug, err := s.suggestionService.GetOutgoingSuggestions(context.Background(), claims.UserId)
+	if err != nil {
+		respondWithError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	respondWithJson(w, sug)
+}
+
+func (s *Server) AddSugestion(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		respondWithError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	claims := iface.(*auth.JWTClaims)
+
+	su := &types.EditSuggestion{}
+	if err := json.Unmarshal(body, su); err != nil {
+		respondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	su.SubmitterId = claims.UserId
+	su.SubmitterEmail = claims.Email
+
+	if id, err := s.suggestionService.CreateSuggestion(context.Background(), su); err != nil {
+		respondWithError(w, err, http.StatusBadRequest)
+		return
+	} else {
+		respondWithJson(w, id)
+	}
+}
+
+func (s *Server) ApproveSuggestion(w http.ResponseWriter, r *http.Request) {
+	suId := mux.Vars(r)["id"]
+
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	claims := iface.(*auth.JWTClaims)
+
+	if err := s.suggestionService.ApproveSuggestion(context.Background(), claims.UserId, suId); err != nil {
+		respondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	respondWithJson(w, nil)
+}
+
+func (s *Server) RejectSuggestion(w http.ResponseWriter, r *http.Request) {
+	suId := mux.Vars(r)["id"]
+
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	claims := iface.(*auth.JWTClaims)
+
+	if err := s.suggestionService.RejectSuggestion(context.Background(), claims.UserId, suId); err != nil {
+		respondWithError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	respondWithJson(w, nil)
+}

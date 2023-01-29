@@ -18,10 +18,11 @@ type ServerConfig struct {
 }
 
 type ServerBuilder struct {
-	config          *ServerConfig
-	router          *mux.Router
-	authService     services.AuthService
-	questionService services.QuestionService
+	config            *ServerConfig
+	router            *mux.Router
+	authService       services.AuthService
+	questionService   services.QuestionService
+	suggestionService services.SuggestionsService
 }
 
 func NewServerBuilder() *ServerBuilder {
@@ -48,22 +49,29 @@ func (b *ServerBuilder) WithQuestionService(questionService services.QuestionSer
 	return b
 }
 
+func (b *ServerBuilder) WithSuggestionService(suggestionService services.SuggestionsService) *ServerBuilder {
+	b.suggestionService = suggestionService
+	return b
+}
+
 func (b *ServerBuilder) Build() *Server {
 	server := &Server{
-		Config:          b.config,
-		Router:          b.router,
-		authService:     b.authService,
-		questionService: b.questionService,
+		Config:            b.config,
+		Router:            b.router,
+		authService:       b.authService,
+		questionService:   b.questionService,
+		suggestionService: b.suggestionService,
 	}
 
 	return server
 }
 
 type Server struct {
-	Config          *ServerConfig
-	Router          *mux.Router
-	authService     services.AuthService
-	questionService services.QuestionService
+	Config            *ServerConfig
+	Router            *mux.Router
+	authService       services.AuthService
+	questionService   services.QuestionService
+	suggestionService services.SuggestionsService
 }
 
 func NewServer() *Server {
@@ -71,6 +79,7 @@ func NewServer() *Server {
 		WithRouter(mux.NewRouter()).
 		WithAuthService(services.NewAuthService()).
 		WithQuestionService(services.NewQuestionService()).
+		WithSuggestionService(services.NewSuggestionsService()).
 		Build()
 }
 
@@ -114,8 +123,11 @@ func (s *Server) BuildRoutes() {
 	apiRouter.HandleFunc("/questions/addReply", s.AddReplyToAnswer).Methods(http.MethodPut)
 	apiRouter.HandleFunc("/questions/favoriteAnswer", s.FavoriteAnswer).Methods(http.MethodPut)
 	apiRouter.HandleFunc("/questions/votes", s.UpdateQuestionVotes).Methods(http.MethodPut)
-	// apiRouter.HandleFunc("/questions/suggestions", s.AddSugestion).Methods(http.MethodPost)
-	// apiRouter.HandleFunc("/questions/suggestions", s.GetSuggestions).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/suggestions/incoming", s.GetIncomingSuggestions).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/suggestions/outgoing", s.GetOutgoingSuggestions).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/suggestions/approve/{id}", s.ApproveSuggestion).Methods(http.MethodPut)
+	apiRouter.HandleFunc("/suggestions/reject/{id}", s.RejectSuggestion).Methods(http.MethodPut)
+	apiRouter.HandleFunc("/suggestions", s.AddSugestion).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/user", s.GetUserData).Methods(http.MethodGet)
 }
 

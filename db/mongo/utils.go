@@ -14,8 +14,9 @@ const dbName = "RuntimeError"
 type ModelLabel string
 
 const (
-	UserLabel     ModelLabel = "user"
-	QuestionLabel ModelLabel = "question"
+	UserLabel       ModelLabel = "user"
+	QuestionLabel   ModelLabel = "question"
+	SuggestionLabel ModelLabel = "suggestion"
 )
 
 func decodeSingleResult(result *mongo.SingleResult, label ModelLabel) (any, error) {
@@ -32,6 +33,12 @@ func decodeSingleResult(result *mongo.SingleResult, label ModelLabel) (any, erro
 			return nil, err
 		}
 		return question, nil
+	case SuggestionLabel:
+		s := &types.EditSuggestion{}
+		if err := result.Decode(s); err != nil {
+			return nil, err
+		}
+		return s, nil
 	}
 
 	return nil, errors.New("unknown label")
@@ -71,6 +78,17 @@ func decodeCursor(ctx context.Context, cursor *mongo.Cursor, label ModelLabel) (
 			questions = append(questions, question)
 		}
 		return questions, nil
+	case SuggestionLabel:
+		var ss []*types.EditSuggestion
+		for cursor.Next(ctx) {
+			s := &types.EditSuggestion{}
+			if err := cursor.Decode(s); err != nil {
+				return nil, err
+			}
+
+			ss = append(ss, s)
+		}
+		return ss, nil
 	}
 
 	return nil, errors.New("unknown label")

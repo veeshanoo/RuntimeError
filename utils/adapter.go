@@ -106,3 +106,27 @@ func MongoQuestionToDomain(question *mongo.Question) *domain.Question {
 	}
 	return x
 }
+
+func DomainSToMongoS(s *domain.EditSuggestion) *mongo.EditSuggestion {
+	return &mongo.EditSuggestion{
+		Id:             s.Id,
+		QuestionId:     s.QuestionId,
+		ApproverId:     s.ApproverId,
+		SubmitterId:    s.SubmitterId,
+		SubmitterEmail: s.SubmitterEmail,
+		Contents:       s.Contents,
+		EditStatus:     s.EditStatus,
+	}
+}
+
+func MongoSToDomainS(s *mongo.EditSuggestion) *domain.EditSuggestion {
+	return &domain.EditSuggestion{
+		Id:             s.Id,
+		QuestionId:     s.QuestionId,
+		ApproverId:     s.ApproverId,
+		SubmitterId:    s.SubmitterId,
+		SubmitterEmail: s.SubmitterEmail,
+		Contents:       s.Contents,
+		EditStatus:     s.EditStatus,
+	}
+}
