@@ -8,9 +8,6 @@ import (
 	"RuntimeError/utils"
 	"context"
 	"errors"
-	"fmt"
-
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type AuthService interface {
@@ -50,7 +47,7 @@ func (svc *AuthServiceImpl) Login(ctx context.Context, user *types.User) (string
 		return "", errors.New("unauthorized")
 	}
 
-	return svc.Create(ctx, &types.User{Id: userResult.Id})
+	return svc.Create(ctx, &types.User{Id: userResult.Id, Email: userResult.Email})
 }
 
 func (svc *AuthServiceImpl) Register(ctx context.Context, user *types.User) error {
@@ -77,30 +74,4 @@ func (svc *AuthServiceImpl) GetUserData(ctx context.Context, id string) (*types.
 	}
 
 	return userData, nil
-}
-
-func (svc *AuthServiceImpl) Transaction(ctx context.Context) (*types.User, error) {
-	t := internalmongo.NewTransaction(func(ctx context.Context) (interface{}, error) {
-		switch ctx.(type) {
-		case mongo.SessionContext:
-			fmt.Println("WOW")
-		}
-
-		_, err := svc.userRepo.GetById(ctx, "637e7f29bc95879e58d567fb")
-		if err == nil {
-			fmt.Println("WORKS 1")
-		}
-		usr, err := svc.userRepo.GetById(ctx, "637e7f29bc95879e58d567fb")
-		if err == nil {
-			fmt.Println("WORKS 2")
-		}
-
-		return usr, nil
-	})
-
-	if res, err := t.Execute(ctx); err != nil {
-		return nil, err
-	} else {
-		return res.(*types.User), nil
-	}
 }

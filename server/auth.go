@@ -1,6 +1,7 @@
 package server
 
 import (
+	"RuntimeError/auth"
 	"RuntimeError/types/domain"
 	"context"
 	"encoding/json"
@@ -64,8 +65,8 @@ func (s *Server) GetUserData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := idIface.(string)
-	userData, err := s.authService.GetUserData(context.TODO(), userId)
+	claims := idIface.(*auth.JWTClaims)
+	userData, err := s.authService.GetUserData(context.TODO(), claims.UserId)
 	if err != nil {
 		respondWithError(w, errors.New("unknown"), http.StatusInternalServerError)
 		return

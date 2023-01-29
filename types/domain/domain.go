@@ -18,27 +18,30 @@ type UserData struct {
 }
 
 type Reply struct {
-	Id          string `json:"id"`
-	Contents    string `json:"contents"`
-	SubmitterId string `json:"submitter_id"`
+	Id             string `json:"id"`
+	Contents       string `json:"contents"`
+	SubmitterId    string `json:"submitter_id"`
+	SubmitterEmail string `json:"submitter_email"`
 }
 
 type Answer struct {
-	Id          string  `json:"id"`
-	Contents    string  `json:"contents"`
-	SubmitterId string  `json:"submitter_id"`
-	Replies     []Reply `json:"replies"`
+	Id             string  `json:"id"`
+	Contents       string  `json:"contents"`
+	SubmitterId    string  `json:"submitter_id"`
+	SubmitterEmail string  `json:"submitter_email"`
+	Replies        []Reply `json:"replies"`
 }
 
 type Question struct {
-	Id         string   `json:"id"`
-	SumitterId string   `json:"submitter_id"`
-	Title      string   `json:"title"`
-	Contents   string   `json:"contents"`
-	Answers    []Answer `json:"answers"`
-	BestAnswer string   `json:"best_answer_id"`
-	Upvoters   []string `json:"upvoters"`
-	Downvoters []string `json:"downvoters"`
+	Id             string   `json:"id"`
+	SubmitterId    string   `json:"submitter_id"`
+	SubmitterEmail string   `json:"submitter_email"`
+	Title          string   `json:"title"`
+	Contents       string   `json:"contents"`
+	Answers        []Answer `json:"answers"`
+	BestAnswer     string   `json:"best_answer_id"`
+	Upvoters       []string `json:"upvoters"`
+	Downvoters     []string `json:"downvoters"`
 }
 
 // for questions only
@@ -67,14 +70,12 @@ type EditContentRequest struct {
 }
 
 type AddAnswerRequest struct {
-	QuestionId  string `json:"question_id"`
-	SubmitterId string `json:"submitter_id"`
-	Contents    string `json:"contents"`
+	QuestionId string `json:"question_id"`
+	Contents   string `json:"contents"`
 }
 
 type AddReplyRequest struct {
-	SubmitterId string `json:"submitter_id"`
-	QuestionId  string `json:"question_id"`
-	AnswerId    string `json:"answer_id"`
-	Contents    string `json:"contents"`
+	QuestionId string `json:"question_id"`
+	AnswerId   string `json:"answer_id"`
+	Contents   string `json:"contents"`
 }

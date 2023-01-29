@@ -1,27 +1,30 @@
 package types
 
 type Reply struct {
-	Id          string `json:"id"`
-	Contents    string `json:"contents"`
-	SubmitterId string `json:"submitter_id"`
+	Id             string `json:"id"`
+	Contents       string `json:"contents"`
+	SubmitterId    string `json:"submitter_id"`
+	SubmitterEmail string `json:"submitter_email"`
 }
 
 type Answer struct {
-	Id          string  `json:"id"`
-	Contents    string  `json:"contents"`
-	SubmitterId string  `json:"submitter_id"`
-	Replies     []Reply `json:"replies"`
+	Id             string  `json:"id"`
+	Contents       string  `json:"contents"`
+	SubmitterId    string  `json:"submitter_id"`
+	SubmitterEmail string  `json:"submitter_email"`
+	Replies        []Reply `json:"replies"`
 }
 
 type Question struct {
-	Id         string   `json:"id"`
-	SumitterId string   `json:"submitter_id"`
-	Title      string   `json:"title"`
-	Contents   string   `json:"contents"`
-	Answers    []Answer `json:"answers"`
-	BestAnswer string   `json:"best_answer_id"`
-	Upvoters   []string `json:"upvoters"`
-	Downvoters []string `json:"downvoters"`
+	Id             string   `json:"id"`
+	SubmitterId    string   `json:"submitter_id"`
+	SubmitterEmail string   `json:"submitter_email"`
+	Title          string   `json:"title"`
+	Contents       string   `json:"contents"`
+	Answers        []Answer `json:"answers"`
+	BestAnswer     string   `json:"best_answer_id"`
+	Upvoters       []string `json:"upvoters"`
+	Downvoters     []string `json:"downvoters"`
 }
 
 // for questions only

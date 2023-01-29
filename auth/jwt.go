@@ -13,12 +13,14 @@ var signingKey = []byte("mega-super-secret-key")
 
 type JWTClaims struct {
 	UserId string `json:"user_id"`
+	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
 
 func newJwt(user *types.User) (string, error) {
 	claims := &JWTClaims{
 		UserId: user.Id,
+		Email:  user.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * 60 * time.Minute)),
 		},
@@ -52,5 +54,5 @@ func (p *JWTProvider) Verify(ctx context.Context, token string) (interface{}, er
 		return nil, err
 	}
 
-	return res.UserId, nil
+	return res, nil
 }

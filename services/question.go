@@ -1,6 +1,7 @@
 package services
 
 import (
+	"RuntimeError/auth"
 	"RuntimeError/db/mongo"
 	internalmongo "RuntimeError/db/mongo"
 	"RuntimeError/repo"
@@ -18,10 +19,10 @@ type QuestionService interface {
 	CreateQuestion(ctx context.Context, question *types.Question) (string, error)
 	GetQuestion(ctx context.Context, id string) (*types.Question, error)
 	GetAll(ctx context.Context) ([]*types.Question, error)
-	EditConent(ctx context.Context, userId string, content *types.EditContentRequest) error
-	FavoriteAnswer(ctx context.Context, userId, questionId, answerId string) error
-	AddReplyToAnswer(ctx context.Context, req *types.AddReplyRequest) error
-	AddAnswerToQuestion(ctx context.Context, req *types.AddAnswerRequest) error
+	EditContent(ctx context.Context, userId string, content *types.EditContentRequest) error
+	FavoriteAnswer(ctx context.Context, questionId string, answerId string, claims *auth.JWTClaims) error
+	AddReplyToAnswer(ctx context.Context, req *types.AddReplyRequest, claims *auth.JWTClaims) error
+	AddAnswerToQuestion(ctx context.Context, req *types.AddAnswerRequest, claims *auth.JWTClaims) error
 	DownvoteQuestion(ctx context.Context, questionId, userId string) error
 	UpvoteQuestion(ctx context.Context, questionId, userId string) error
 }
@@ -36,7 +37,7 @@ func NewQuestionService() QuestionService {
 	}
 }
 
-func (svc *QuestionServiceImpl) AddAnswerToQuestion(ctx context.Context, req *types.AddAnswerRequest) error {
+func (svc *QuestionServiceImpl) AddAnswerToQuestion(ctx context.Context, req *types.AddAnswerRequest, claims *auth.JWTClaims) error {
 	t := internalmongo.NewTransaction(func(ctx context.Context) (interface{}, error) {
 		result, err := svc.questionRepo.GetById(ctx, req.QuestionId)
 		if err != nil {
@@ -45,10 +46,11 @@ func (svc *QuestionServiceImpl) AddAnswerToQuestion(ctx context.Context, req *ty
 		question := result
 
 		ans := mongotypes.Answer{
-			Id:          primitive.NewObjectID().Hex(),
-			SubmitterId: req.SubmitterId,
-			Contents:    req.Contents,
-			Replies:     nil,
+			Id:             primitive.NewObjectID().Hex(),
+			SubmitterId:    claims.UserId,
+			SubmitterEmail: claims.Email,
+			Contents:       req.Contents,
+			Replies:        nil,
 		}
 		question.Answers = append(question.Answers, ans)
 
@@ -63,7 +65,7 @@ func (svc *QuestionServiceImpl) AddAnswerToQuestion(ctx context.Context, req *ty
 	}
 }
 
-func (svc *QuestionServiceImpl) AddReplyToAnswer(ctx context.Context, req *types.AddReplyRequest) error {
+func (svc *QuestionServiceImpl) AddReplyToAnswer(ctx context.Context, req *types.AddReplyRequest, claims *auth.JWTClaims) error {
 	t := internalmongo.NewTransaction(func(ctx context.Context) (interface{}, error) {
 		result, err := svc.questionRepo.GetById(ctx, req.QuestionId)
 		if err != nil {
@@ -72,9 +74,10 @@ func (svc *QuestionServiceImpl) AddReplyToAnswer(ctx context.Context, req *types
 		question := result
 
 		reply := mongotypes.Reply{
-			Id:          primitive.NewObjectID().Hex(),
-			SubmitterId: req.SubmitterId,
-			Contents:    req.Contents,
+			Id:             primitive.NewObjectID().Hex(),
+			SubmitterId:    claims.UserId,
+			SubmitterEmail: claims.Email,
+			Contents:       req.Contents,
 		}
 
 		found := false
@@ -101,14 +104,14 @@ func (svc *QuestionServiceImpl) AddReplyToAnswer(ctx context.Context, req *types
 	}
 }
 
-func (svc *QuestionServiceImpl) EditConent(ctx context.Context, userId string, content *types.EditContentRequest) error {
+func (svc *QuestionServiceImpl) EditContent(ctx context.Context, userId string, content *types.EditContentRequest) error {
 	t := internalmongo.NewTransaction(func(ctx context.Context) (interface{}, error) {
 		result, err := svc.questionRepo.GetById(ctx, content.QuestionId)
 		if err != nil {
 			return nil, errors.New("Not found")
 		}
 
-		if result.SumitterId != userId {
+		if result.SubmitterId != userId {
 			return nil, errors.New("Unauthorized")
 		}
 
@@ -196,7 +199,7 @@ func (svc *QuestionServiceImpl) DownvoteQuestion(ctx context.Context, questionId
 	}
 }
 
-func (svc *QuestionServiceImpl) FavoriteAnswer(ctx context.Context, userId, questionId, answerId string) error {
+func (svc *QuestionServiceImpl) FavoriteAnswer(ctx context.Context, questionId string, answerId string, claims *auth.JWTClaims) error {
 	t := internalmongo.NewTransaction(func(ctx context.Context) (interface{}, error) {
 		result, err := svc.questionRepo.GetById(ctx, questionId)
 		if err != nil {

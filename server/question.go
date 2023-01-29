@@ -1,6 +1,7 @@
 package server
 
 import (
+	"RuntimeError/auth"
 	types "RuntimeError/types/domain"
 	"context"
 	"encoding/json"
@@ -25,8 +26,9 @@ func (s *Server) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
-	userId := iface.(string)
-	question.SumitterId = userId
+	claims := iface.(*auth.JWTClaims)
+	question.SubmitterId = claims.UserId
+	question.SubmitterEmail = claims.Email
 
 	questionId, err := s.questionService.CreateQuestion(context.Background(), question)
 	if err != nil {
@@ -51,9 +53,9 @@ func (s *Server) EditContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
-	userId := iface.(string)
+	claims := iface.(*auth.JWTClaims)
 
-	err = s.questionService.EditConent(context.Background(), userId, req)
+	err = s.questionService.EditContent(context.Background(), claims.UserId, req)
 	if err != nil {
 		var status int
 		switch err.Error() {
@@ -80,7 +82,7 @@ func (s *Server) FavoriteAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
-	userId := iface.(string)
+	claims := iface.(*auth.JWTClaims)
 
 	favcomreq := &types.FavoriteCommentRequest{}
 	if err := json.Unmarshal(body, favcomreq); err != nil {
@@ -90,7 +92,7 @@ func (s *Server) FavoriteAnswer(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := s.questionService.FavoriteAnswer(context.Background(), userId, favcomreq.QuestionId, favcomreq.AnswerId); err != nil {
+	if err := s.questionService.FavoriteAnswer(context.Background(), favcomreq.QuestionId, favcomreq.AnswerId, claims); err != nil {
 		respondWithError(w, err, http.StatusUnauthorized)
 		return
 	}
@@ -106,7 +108,7 @@ func (s *Server) UpdateQuestionVotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
-	userId := iface.(string)
+	claims := iface.(*auth.JWTClaims)
 
 	updateReq := &types.UpdateQuestionVotesRequest{}
 	if err := json.Unmarshal(body, updateReq); err != nil {
@@ -123,13 +125,13 @@ func (s *Server) UpdateQuestionVotes(w http.ResponseWriter, r *http.Request) {
 
 	switch updateReq.Type {
 	case "upvote":
-		err = s.questionService.UpvoteQuestion(context.Background(), updateReq.QuestionId, userId)
+		err = s.questionService.UpvoteQuestion(context.Background(), updateReq.QuestionId, claims.UserId)
 		if err != nil {
 			respondWithError(w, err, http.StatusInternalServerError)
 			return
 		}
 	case "downvote":
-		err = s.questionService.DownvoteQuestion(context.Background(), updateReq.QuestionId, userId)
+		err = s.questionService.DownvoteQuestion(context.Background(), updateReq.QuestionId, claims.UserId)
 		if err != nil {
 			respondWithError(w, err, http.StatusInternalServerError)
 			return
@@ -147,16 +149,15 @@ func (s *Server) AddAnswerToQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
-	userId := iface.(string)
+	claims := iface.(*auth.JWTClaims)
 
 	req := &types.AddAnswerRequest{}
 	if err := json.Unmarshal(body, req); err != nil {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
-	req.SubmitterId = userId
 
-	err = s.questionService.AddAnswerToQuestion(context.Background(), req)
+	err = s.questionService.AddAnswerToQuestion(context.Background(), req, claims)
 	if err != nil {
 		respondWithError(w, err, http.StatusNotFound)
 		return
@@ -173,16 +174,15 @@ func (s *Server) AddReplyToAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
-	userId := iface.(string)
+	claims := iface.(*auth.JWTClaims)
 
 	req := &types.AddReplyRequest{}
 	if err := json.Unmarshal(body, req); err != nil {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
-	req.SubmitterId = userId
 
-	err = s.questionService.AddReplyToAnswer(context.Background(), req)
+	err = s.questionService.AddReplyToAnswer(context.Background(), req, claims)
 	if err != nil {
 		respondWithError(w, err, http.StatusNotFound)
 		return
