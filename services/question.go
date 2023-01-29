@@ -6,6 +6,7 @@ import (
 	"RuntimeError/repo"
 	types "RuntimeError/types/domain"
 	mongotypes "RuntimeError/types/mongo"
+	"RuntimeError/utils"
 	helper "RuntimeError/utils"
 	"context"
 	"errors"
@@ -15,6 +16,7 @@ import (
 
 type QuestionService interface {
 	CreateQuestion(ctx context.Context, question *types.Question) (string, error)
+	GetQuestion(ctx context.Context, id string) (*types.Question, error)
 	GetAll(ctx context.Context) ([]*types.Question, error)
 	EditConent(ctx context.Context, userId string, content *types.EditContentRequest) error
 	FavoriteAnswer(ctx context.Context, userId, questionId, answerId string) error
@@ -242,4 +244,12 @@ func (svc *QuestionServiceImpl) GetAll(ctx context.Context) ([]*types.Question, 
 		domainQuestions = append(domainQuestions, helper.MongoQuestionToDomain(mongoQuestion))
 	}
 	return domainQuestions, nil
+}
+
+func (svc *QuestionServiceImpl) GetQuestion(ctx context.Context, id string) (*types.Question, error) {
+	if q, err := svc.questionRepo.GetById(ctx, id); err != nil {
+		return nil, err
+	} else {
+		return utils.MongoQuestionToDomain(q), nil
+	}
 }

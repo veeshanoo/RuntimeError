@@ -7,6 +7,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func (s *Server) CreateQuestion(w http.ResponseWriter, r *http.Request) {
@@ -26,13 +28,13 @@ func (s *Server) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	userId := iface.(string)
 	question.SumitterId = userId
 
-	_, err = s.questionService.CreateQuestion(context.Background(), question)
+	questionId, err := s.questionService.CreateQuestion(context.Background(), question)
 	if err != nil {
 		respondWithError(w, err, http.StatusUnauthorized)
 		return
 	}
 
-	respondWithJson(w, nil)
+	respondWithJson(w, questionId)
 }
 
 func (s *Server) EditContent(w http.ResponseWriter, r *http.Request) {
@@ -196,4 +198,14 @@ func (s *Server) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJson(w, questions)
+}
+
+func (s *Server) GetQuestion(w http.ResponseWriter, r *http.Request) {
+	questionId := mux.Vars(r)["questionId"]
+	q, err := s.questionService.GetQuestion(context.Background(), questionId)
+	if err != nil {
+		respondWithError(w, err, http.StatusNotFound)
+		return
+	}
+	respondWithJson(w, q)
 }

@@ -23,7 +23,11 @@ func (q *QuestionRepoImpl) Insert(ctx context.Context, question *types.Question)
 	question.Upvoters = nil
 	question.Downvoters = nil
 	question.Id = primitive.NewObjectID().Hex()
-	return Insert(ctx, questionsCollectionName, question, QuestionLabel)
+	if _, err := Insert(ctx, questionsCollectionName, question, QuestionLabel); err != nil {
+		return "", err
+	}
+
+	return question.Id, nil
 }
 
 func (q *QuestionRepoImpl) Update(ctx context.Context, oldQuestion *types.Question, newQuestion *types.Question) (string, error) {
