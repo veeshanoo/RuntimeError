@@ -49,3 +49,32 @@ type EditSuggestion struct {
 	Contents    string `json:"contents"`
 	EditStatus  string `json:"edit_status"` // default,approve,reject
 }
+
+type FavoriteCommentRequest struct {
+	QuestionId string `json:"question_id"`
+	AnswerId   string `json:"answer_id"`
+}
+
+type UpdateQuestionVotesRequest struct {
+	Type       string `json:"type"` // upvote, downvote
+	QuestionId string `json:"question_id"`
+}
+
+type EditContentRequest struct {
+	QuestionId string `json:"question_id"`
+	Title      string `json:"title"`
+	Content    string `json:"content"`
+}
+
+type AddAnswerRequest struct {
+	QuestionId  string `json:"question_id"`
+	SubmitterId string `json:"submitter_id"`
+	Contents    string `json:"contents"`
+}
+
+type AddReplyRequest struct {
+	SubmitterId string `json:"submitter_id"`
+	QuestionId  string `json:"question_id"`
+	AnswerId    string `json:"answer_id"`
+	Contents    string `json:"contents"`
+}

@@ -49,7 +49,6 @@ func DomainAnswerToMongo(answers []domain.Answer) []mongo.Answer {
 }
 
 func DomainQuestionToMongo(question *domain.Question) *mongo.Question {
-
 	x := &mongo.Question{
 		Id:         question.Id,
 		SumitterId: question.SumitterId,
@@ -89,7 +88,6 @@ func MongoAnswerToDomain(answers []mongo.Answer) []domain.Answer {
 }
 
 func MongoQuestionToDomain(question *mongo.Question) *domain.Question {
-
 	x := &domain.Question{
 		Id:         question.Id,
 		SumitterId: question.SumitterId,

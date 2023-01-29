@@ -20,13 +20,18 @@ func (s *Server) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
+
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	userId := iface.(string)
+	question.SumitterId = userId
+
 	_, err = s.questionService.CreateQuestion(context.Background(), question)
 	if err != nil {
 		respondWithError(w, err, http.StatusUnauthorized)
 		return
 	}
-	respondWithJson(w, nil)
 
+	respondWithJson(w, nil)
 }
 
 func (s *Server) EditContent(w http.ResponseWriter, r *http.Request) {
@@ -36,166 +41,158 @@ func (s *Server) EditContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	question := &types.Question{}
-	if err := json.Unmarshal(body, question); err != nil {
+	req := &types.EditContentRequest{}
+	if err := json.Unmarshal(body, req); err != nil {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
-	_, err = s.questionService.EditConent(context.Background(), question.Id, question.Contents)
+
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	userId := iface.(string)
+
+	err = s.questionService.EditConent(context.Background(), userId, req)
 	if err != nil {
-		respondWithError(w, err, http.StatusUnauthorized)
+		var status int
+		switch err.Error() {
+		case "Not found":
+			status = http.StatusNotFound
+		case "Unauthorized":
+			status = http.StatusUnauthorized
+		default:
+			status = http.StatusInternalServerError
+		}
+
+		respondWithError(w, err, status)
 		return
 	}
-	respondWithJson(w, question)
 
+	respondWithJson(w, nil)
 }
 
-func (s *Server) FavoriteComment(w http.ResponseWriter, r *http.Request) {
-	_, err := io.ReadAll(r.Body)
+func (s *Server) FavoriteAnswer(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		respondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	answerId := ""
-	id := ""
-	values := r.URL.Query()
-	for k, v := range values {
-		if k == "id" {
-			id = v[0]
-		} else if k == "answer" {
-			answerId = v[0]
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	userId := iface.(string)
+
+	favcomreq := &types.FavoriteCommentRequest{}
+	if err := json.Unmarshal(body, favcomreq); err != nil {
+		if err != nil {
+			respondWithError(w, err, http.StatusBadRequest)
+			return
 		}
 	}
-	_, err = s.questionService.FavoriteComment(context.Background(), id, answerId)
-	if err != nil {
+
+	if err := s.questionService.FavoriteAnswer(context.Background(), userId, favcomreq.QuestionId, favcomreq.AnswerId); err != nil {
 		respondWithError(w, err, http.StatusUnauthorized)
 		return
 	}
-	respondWithJson(w, nil)
 
+	respondWithJson(w, nil)
 }
 
-func (s *Server) DownvoteQuestion(w http.ResponseWriter, r *http.Request) {
-	_, err := io.ReadAll(r.Body)
+func (s *Server) UpdateQuestionVotes(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		respondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	downvotterId := ""
-	id := ""
-	values := r.URL.Query()
-	for k, v := range values {
-		if k == "id" {
-			id = v[0]
-		} else if k == "downvotter" {
-			downvotterId = v[0]
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	userId := iface.(string)
+
+	updateReq := &types.UpdateQuestionVotesRequest{}
+	if err := json.Unmarshal(body, updateReq); err != nil {
+		if err != nil {
+			respondWithError(w, err, http.StatusBadRequest)
+			return
 		}
 	}
-	_, err = s.questionService.DownvoteQuestion(context.Background(), id, downvotterId)
-	if err != nil {
-		respondWithError(w, err, http.StatusUnauthorized)
-		return
-	}
-	respondWithJson(w, nil)
 
-}
-
-func (s *Server) UpvoteQuestion(w http.ResponseWriter, r *http.Request) {
-	_, err := io.ReadAll(r.Body)
-	if err != nil {
-		respondWithError(w, err, http.StatusInternalServerError)
+	if updateReq.Type != "upvote" && updateReq.Type != "downvote" {
+		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	upvotterId := ""
-	id := ""
-	values := r.URL.Query()
-	for k, v := range values {
-		if k == "id" {
-			id = v[0]
-		} else if k == "upvotter" {
-			upvotterId = v[0]
+	switch updateReq.Type {
+	case "upvote":
+		err = s.questionService.UpvoteQuestion(context.Background(), updateReq.QuestionId, userId)
+		if err != nil {
+			respondWithError(w, err, http.StatusInternalServerError)
+			return
+		}
+	case "downvote":
+		err = s.questionService.DownvoteQuestion(context.Background(), updateReq.QuestionId, userId)
+		if err != nil {
+			respondWithError(w, err, http.StatusInternalServerError)
+			return
 		}
 	}
-	_, err = s.questionService.UpvoteQuestion(context.Background(), id, upvotterId)
-	if err != nil {
-		respondWithError(w, err, http.StatusUnauthorized)
-		return
-	}
-	respondWithJson(w, nil)
 
+	respondWithJson(w, nil)
 }
 
 func (s *Server) AddAnswerToQuestion(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
-	values := r.URL.Query()
-	id := ""
-	for k, v := range values {
-		if k == "id" {
-			id = v[0]
-		}
-	}
-
 	if err != nil {
 		respondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	answer := &types.Answer{}
-	if err := json.Unmarshal(body, answer); err != nil {
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	userId := iface.(string)
+
+	req := &types.AddAnswerRequest{}
+	if err := json.Unmarshal(body, req); err != nil {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
-	_, err = s.questionService.AddAnswerToQuestion(context.Background(), id, answer)
+	req.SubmitterId = userId
+
+	err = s.questionService.AddAnswerToQuestion(context.Background(), req)
 	if err != nil {
-		respondWithError(w, err, http.StatusUnauthorized)
+		respondWithError(w, err, http.StatusNotFound)
 		return
 	}
-	respondWithJson(w, id)
 
+	respondWithJson(w, nil)
 }
 
 func (s *Server) AddReplyToAnswer(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
-	values := r.URL.Query()
-	id := ""
-	answerId := ""
-	for k, v := range values {
-		if k == "id" {
-			id = v[0]
-		} else if k == "answer" {
-			answerId = v[0]
-		}
-	}
-
-	if err != nil || id == "" || answerId == "" {
+	if err != nil {
 		respondWithError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	reply := &types.Reply{}
-	if err := json.Unmarshal(body, reply); err != nil {
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	userId := iface.(string)
+
+	req := &types.AddReplyRequest{}
+	if err := json.Unmarshal(body, req); err != nil {
 		respondWithError(w, err, http.StatusBadRequest)
 		return
 	}
-	_, err = s.questionService.AddReplyToAnswer(context.Background(), id, answerId, reply)
+	req.SubmitterId = userId
+
+	err = s.questionService.AddReplyToAnswer(context.Background(), req)
 	if err != nil {
-		respondWithError(w, err, http.StatusUnauthorized)
+		respondWithError(w, err, http.StatusNotFound)
 		return
 	}
-	respondWithJson(w, id)
-
+	
+	respondWithJson(w, nil)
 }
 
 func (s *Server) GetAll(w http.ResponseWriter, r *http.Request) {
-
 	questions, err := s.questionService.GetAll(context.Background())
 	if err != nil {
 		respondWithError(w, err, http.StatusUnauthorized)
 		return
 	}
 	respondWithJson(w, questions)
-
 }

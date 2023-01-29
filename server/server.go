@@ -105,15 +105,16 @@ func (s *Server) BuildRoutes() {
 	// routes
 	apiRouter.HandleFunc("/login", s.Login).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/register", s.Register).Methods(http.MethodPost)
-	apiRouter.HandleFunc("/test", s.Test).Methods(http.MethodGet)
+	// apiRouter.HandleFunc("/test", s.Test).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/questions/create", s.CreateQuestion).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/questions/getAll", s.GetAll).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/questions/editContent", s.EditContent).Methods(http.MethodPut)
 	apiRouter.HandleFunc("/questions/addAnswerToQuestion", s.AddAnswerToQuestion).Methods(http.MethodPut)
-	apiRouter.HandleFunc("/questions/favoriteComment", s.FavoriteComment).Methods(http.MethodPut)
-	apiRouter.HandleFunc("/questions/downvoteQuestion", s.DownvoteQuestion).Methods(http.MethodPut)
-	apiRouter.HandleFunc("/questions/upvoteQuestion", s.UpvoteQuestion).Methods(http.MethodPut)
+	apiRouter.HandleFunc("/questions/favoriteAnswer", s.FavoriteAnswer).Methods(http.MethodPut)
+	apiRouter.HandleFunc("/questions/votes", s.UpdateQuestionVotes).Methods(http.MethodPut)
 	apiRouter.HandleFunc("/questions/addReplyToAnswer", s.AddReplyToAnswer).Methods(http.MethodPut)
+	// apiRouter.HandleFunc("/questions/suggestions", s.AddSugestion).Methods(http.MethodPost)
+	// apiRouter.HandleFunc("/questions/suggestions", s.GetSuggestions).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/user", s.GetUserData).Methods(http.MethodGet)
 }
 
