@@ -53,8 +53,8 @@ func (u *UserRepoImpl) Insert(ctx context.Context, user *types.User) (string, er
 	return Insert(ctx, usersCollectionName, user, UserLabel)
 }
 
-func (u *UserRepoImpl) Update(ctx context.Context, oldUser *types.User, newUser *types.User) (*types.User, error) {
-	return nil, nil
+func (u *UserRepoImpl) Update(ctx context.Context, oldUser *types.User, newUser *types.User) (string, error) {
+	return Update(ctx, usersCollectionName, bson.M{"_id": oldUser.Id}, newUser)
 }
 
 func (u *UserRepoImpl) Delete(ctx context.Context, id string) error {

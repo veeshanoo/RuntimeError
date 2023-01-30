@@ -30,11 +30,13 @@ type QuestionService interface {
 
 type QuestionServiceImpl struct {
 	questionRepo repo.QuestionRepo
+	userRepo     repo.UserRepo
 }
 
 func NewQuestionService() QuestionService {
 	return &QuestionServiceImpl{
 		questionRepo: mongo.NewQuestionRepo(),
+		userRepo:     mongo.NewUserRepo(),
 	}
 }
 
@@ -137,6 +139,7 @@ func (svc *QuestionServiceImpl) UpvoteQuestion(ctx context.Context, questionId, 
 		if err != nil {
 			return nil, err
 		}
+
 		question := result
 		for _, id := range question.Upvoters {
 			if id == userId {
@@ -145,16 +148,29 @@ func (svc *QuestionServiceImpl) UpvoteQuestion(ctx context.Context, questionId, 
 			}
 		}
 
+		var delta int64 = 1
 		for idx, downvotter := range question.Downvoters {
 			if downvotter == userId {
 				// remove selected item
+				delta += 1
 				question.Downvoters = append(question.Downvoters[:idx], question.Downvoters[idx+1:]...)
 				break
 			}
 		}
 
-		question.Upvoters = append(question.Upvoters, userId)
+		user, err := svc.userRepo.GetById(ctx, result.SubmitterId)
+		if err != nil {
+			return nil, err
+		}
 
+		// increase submitter rating by 1 points
+		user.Rating += delta
+		_, err = svc.userRepo.Update(ctx, user, user)
+		if err != nil {
+			return nil, err
+		}
+
+		question.Upvoters = append(question.Upvoters, userId)
 		_, err = svc.questionRepo.Update(ctx, result, question)
 		return nil, err
 	})
@@ -172,6 +188,7 @@ func (svc *QuestionServiceImpl) DownvoteQuestion(ctx context.Context, questionId
 		if err != nil {
 			return nil, err
 		}
+
 		question := result
 		for _, id := range question.Downvoters {
 			if id == userId {
@@ -180,15 +197,29 @@ func (svc *QuestionServiceImpl) DownvoteQuestion(ctx context.Context, questionId
 			}
 		}
 
+		var delta int64 = -1
 		for idx, upvoter := range question.Upvoters {
 			if upvoter == userId {
 				// remove selected item
+				delta -= 1
 				question.Upvoters = append(question.Upvoters[:idx], question.Upvoters[idx+1:]...)
 				break
 			}
 		}
-		question.Downvoters = append(question.Downvoters, userId)
 
+		user, err := svc.userRepo.GetById(ctx, result.SubmitterId)
+		if err != nil {
+			return nil, err
+		}
+
+		// increase submitter rating by 1 points
+		user.Rating += delta
+		_, err = svc.userRepo.Update(ctx, user, user)
+		if err != nil {
+			return nil, err
+		}
+
+		question.Downvoters = append(question.Downvoters, userId)
 		_, err = svc.questionRepo.Update(ctx, result, question)
 		return nil, err
 	})
@@ -209,17 +240,32 @@ func (svc *QuestionServiceImpl) FavoriteAnswer(ctx context.Context, questionId s
 
 		question := result
 		if question.BestAnswer != "" {
-			errors.New("Best answer already exists.")
+			return nil, errors.New("Best answer already exists.")
 		}
+
 		answerExist := false
+		submitterId := ""
 		for _, answer := range question.Answers {
 			if answer.Id == answerId {
 				answerExist = true
+				submitterId = answer.SubmitterId
 			}
 		}
 
 		if !answerExist {
 			return nil, errors.New("Answer doesn't exists")
+		}
+
+		user, err := svc.userRepo.GetById(ctx, submitterId)
+		if err != nil {
+			return nil, err
+		}
+
+		// increase submitter rating by 5 points
+		user.Rating += 5
+		_, err = svc.userRepo.Update(ctx, user, user)
+		if err != nil {
+			return nil, err
 		}
 
 		question.BestAnswer = answerId

@@ -21,12 +21,14 @@ type SuggestionsService interface {
 type SuggestionsServiceImpl struct {
 	suggestionRepo repo.SuggestionRepo
 	questionRepo   repo.QuestionRepo
+	userRepo       repo.UserRepo
 }
 
 func NewSuggestionsService() SuggestionsService {
 	return &SuggestionsServiceImpl{
 		suggestionRepo: mongo.NewSuggestionRepo(),
 		questionRepo:   mongo.NewQuestionRepo(),
+		userRepo:       mongo.NewUserRepo(),
 	}
 }
 
@@ -36,6 +38,10 @@ func (svc *SuggestionsServiceImpl) CreateSuggestion(ctx context.Context, s *type
 		q, err := svc.questionRepo.GetById(ctx, s.QuestionId)
 		if err != nil {
 			return nil, err
+		}
+
+		if s.SubmitterId == q.SubmitterId {
+			return nil, errors.New("not permitted")
 		}
 
 		s.ApproverId = q.SubmitterId
@@ -104,6 +110,18 @@ func (svc *SuggestionsServiceImpl) ApproveSuggestion(ctx context.Context, userId
 		q.Contents = su.Contents
 		_, err = svc.questionRepo.Update(ctx, q, q)
 
+		if err != nil {
+			return nil, err
+		}
+
+		user, err := svc.userRepo.GetById(ctx, su.SubmitterId)
+		if err != nil {
+			return nil, err
+		}
+
+		// increase submitter rating by 3 points
+		user.Rating += 3
+		_, err = svc.userRepo.Update(ctx, user, user)
 		if err != nil {
 			return nil, err
 		}
