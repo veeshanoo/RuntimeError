@@ -117,6 +117,7 @@ func (s *Server) BuildRoutes() {
 	apiRouter.HandleFunc("/test", s.Test).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/questions/{questionId}", s.GetQuestion).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/questions", s.GetAll).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/user/questions", s.GetQuestionsForUser).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/questions", s.CreateQuestion).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/questions/editContent", s.EditContent).Methods(http.MethodPut)
 	apiRouter.HandleFunc("/questions/addAnswer", s.AddAnswerToQuestion).Methods(http.MethodPut)

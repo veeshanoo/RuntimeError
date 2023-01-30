@@ -19,6 +19,7 @@ type QuestionService interface {
 	CreateQuestion(ctx context.Context, question *types.Question) (string, error)
 	GetQuestion(ctx context.Context, id string) (*types.Question, error)
 	GetAll(ctx context.Context) ([]*types.Question, error)
+	GetQuestionsForUser(ctx context.Context, userId string) ([]*types.Question, error)
 	EditContent(ctx context.Context, userId string, content *types.EditContentRequest) error
 	FavoriteAnswer(ctx context.Context, questionId string, answerId string, claims *auth.JWTClaims) error
 	AddReplyToAnswer(ctx context.Context, req *types.AddReplyRequest, claims *auth.JWTClaims) error
@@ -239,6 +240,18 @@ func (svc *QuestionServiceImpl) CreateQuestion(ctx context.Context, question *ty
 
 func (svc *QuestionServiceImpl) GetAll(ctx context.Context) ([]*types.Question, error) {
 	mongoQuestions, err := svc.questionRepo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	domainQuestions := []*types.Question{}
+	for _, mongoQuestion := range mongoQuestions {
+		domainQuestions = append(domainQuestions, helper.MongoQuestionToDomain(mongoQuestion))
+	}
+	return domainQuestions, nil
+}
+
+func (svc *QuestionServiceImpl) GetQuestionsForUser(ctx context.Context, userId string) ([]*types.Question, error) {
+	mongoQuestions, err := svc.questionRepo.GetAllForUser(ctx, userId)
 	if err != nil {
 		return nil, err
 	}

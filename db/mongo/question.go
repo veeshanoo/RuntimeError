@@ -47,6 +47,15 @@ func (q *QuestionRepoImpl) GetAll(ctx context.Context) ([]*types.Question, error
 	return result.([]*types.Question), nil
 }
 
+func (q *QuestionRepoImpl) GetAllForUser(ctx context.Context, userId string) ([]*types.Question, error) {
+	result, err := GetAll(ctx, questionsCollectionName, bson.M{"submitterid": userId}, QuestionLabel)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.([]*types.Question), nil
+}
+
 func (q *QuestionRepoImpl) GetById(ctx context.Context, id string) (*types.Question, error) {
 	result, err := GetOne(ctx, questionsCollectionName, bson.M{"id": id}, QuestionLabel)
 	if err != nil {

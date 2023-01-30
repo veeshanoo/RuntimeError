@@ -200,6 +200,18 @@ func (s *Server) GetAll(w http.ResponseWriter, r *http.Request) {
 	respondWithJson(w, questions)
 }
 
+func (s *Server) GetQuestionsForUser(w http.ResponseWriter, r *http.Request) {
+	iface, _ := s.authService.Verify(context.TODO(), r.Header.Get("auth-token"))
+	claims := iface.(*auth.JWTClaims)
+
+	questions, err := s.questionService.GetQuestionsForUser(context.Background(), claims.UserId)
+	if err != nil {
+		respondWithError(w, err, http.StatusUnauthorized)
+		return
+	}
+	respondWithJson(w, questions)
+}
+
 func (s *Server) GetQuestion(w http.ResponseWriter, r *http.Request) {
 	questionId := mux.Vars(r)["questionId"]
 	q, err := s.questionService.GetQuestion(context.Background(), questionId)
